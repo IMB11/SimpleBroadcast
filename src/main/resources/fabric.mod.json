@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "simplebroadcast",
+  "version": "${version}",
+  "name": "SimpleBroadcast",
+  "description": "Create, schedule and announce broadcasts to the entire server.",
+  "authors": [
+    "mineblock11"
+  ],
+  "contact": {
+    "website": "https://docs.mineblock11.dev/",
+    "repo": "https://github.com/mineblock11/SimpleBroadcast"
+  },
+  "license": "MIT",
+  "icon": "assets/simplebroadcast/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.mineblock11.simplebroadcast.client.SimpleBroadcastClient"
+    ],
+    "main": [
+      "com.mineblock11.simplebroadcast.SimpleBroadcast"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "fabric": "*",
+    "minecraft": ">=1.19 <1.19.2"
+  }
+}
