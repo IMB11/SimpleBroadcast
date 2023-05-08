@@ -1,6 +1,7 @@
 package com.mineblock11.simplebroadcast;
 
 import com.mineblock11.simplebroadcast.commands.SimpleBroadcastCommands;
+import com.mineblock11.simplebroadcast.commands.arguments.BroadcastLocationArgument;
 import com.mineblock11.simplebroadcast.commands.arguments.MessageTypeArgument;
 import com.mineblock11.simplebroadcast.data.MessageType;
 import net.fabricmc.api.ModInitializer;
@@ -14,6 +15,7 @@ public class SimpleBroadcast implements ModInitializer {
     @Override
     public void onInitialize() {
         ArgumentTypeRegistry.registerArgumentType(new Identifier("simplebroadcast", "message_type"), MessageTypeArgument.class, ConstantArgumentSerializer.of(MessageTypeArgument::new));
+        ArgumentTypeRegistry.registerArgumentType(new Identifier("simplebroadcast", "broadcast_location"), BroadcastLocationArgument.class, ConstantArgumentSerializer.of(BroadcastLocationArgument::new));
 
         CommandRegistrationCallback.EVENT.register(commands::registerCommands);
     }
