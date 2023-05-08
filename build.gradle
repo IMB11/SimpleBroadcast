@@ -27,8 +27,6 @@ dependencies {
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
@@ -66,19 +64,20 @@ jar {
     }
 }
 
-// configure the maven publication
 publishing {
+    // configure the maven publication
     publications {
         mavenJava(MavenPublication) {
             from components.java
         }
     }
 
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        maven {
+            name "mineblockMaven"
+            url "https://maven.mineblock11.dev/releases"
+            credentials(PasswordCredentials)
+        }
     }
 }
