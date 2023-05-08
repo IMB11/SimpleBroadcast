@@ -24,7 +24,7 @@ public class ConfigurationManager {
 
     private static File getConfigurationFile() {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            return new File("debug-config.json");
+            return new File("simple-broadcast-debug-config.json");
         } else {
             return FabricLoader.getInstance().getConfigDir().resolve("simple-broadcast.json").toFile();
         }
@@ -63,7 +63,7 @@ public class ConfigurationManager {
                 Identifier ID = Identifier.tryParse(obj.get("id").getAsString());
                 obj.remove("id");
 
-                MessageType type = gson.fromJson(obj, MessageType.class);
+                MessageType type = gson.fromJson(obj, MessageType.CustomMessageType.class);
                 ConfigurationManager.REGISTRY.put(ID, type);
             }
 

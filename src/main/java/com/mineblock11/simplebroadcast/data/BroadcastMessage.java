@@ -15,13 +15,11 @@ import org.jetbrains.annotations.Nullable;
 public class BroadcastMessage {
     private final String contents;
     private final MessageType messageType;
-    private final @Nullable Identifier ID;
     private final @Nullable BroadcastLocation broadcastLocation;
 
-    public BroadcastMessage(String contents, MessageType messageType, @Nullable Identifier id, @Nullable BroadcastLocation broadcastLocation) {
+    public BroadcastMessage(String contents, MessageType messageType, @Nullable BroadcastLocation broadcastLocation) {
         this.contents = contents;
         this.messageType = messageType;
-        this.ID = id;
         this.broadcastLocation = broadcastLocation;
     }
 
@@ -50,11 +48,6 @@ public class BroadcastMessage {
 
     public MessageType getMessageType() {
         return messageType;
-    }
-
-    @Nullable
-    public Identifier getID() {
-        return ID;
     }
 
     @Nullable

@@ -155,7 +155,7 @@ public class SimpleBroadcastCommands {
         BroadcastLocation location = BroadcastLocationArgument.get(commandContext, "location");
         MessageType type = MessageTypeArgument.get(commandContext, "type");
         String rawContents = StringArgumentType.getString(commandContext, "contents");
-        BroadcastMessage message = new BroadcastMessage(rawContents, type, null, location);
+        BroadcastMessage message = new BroadcastMessage(rawContents, type, location);
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
         return Command.SINGLE_SUCCESS;
     }
@@ -163,7 +163,7 @@ public class SimpleBroadcastCommands {
     private int executeChatBroadcast(CommandContext<ServerCommandSource> commandContext) {
         MessageType type = MessageTypeArgument.get(commandContext, "type");
         String rawContents = StringArgumentType.getString(commandContext, "contents");
-        BroadcastMessage message = new BroadcastMessage(rawContents, type, null, type.getDefaultLocation());
+        BroadcastMessage message = new BroadcastMessage(rawContents, type, type.getDefaultLocation());
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
         return Command.SINGLE_SUCCESS;
     }
