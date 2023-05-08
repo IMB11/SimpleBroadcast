@@ -13,11 +13,8 @@
   },
   "license": "MIT",
   "icon": "assets/simplebroadcast/icon.png",
-  "environment": "*",
+  "environment": "server",
   "entrypoints": {
-    "client": [
-      "com.mineblock11.simplebroadcast.client.SimpleBroadcastClient"
-    ],
     "main": [
       "com.mineblock11.simplebroadcast.SimpleBroadcast"
     ]

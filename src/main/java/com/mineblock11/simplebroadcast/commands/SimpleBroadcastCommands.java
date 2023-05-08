@@ -1,7 +1,5 @@
 package com.mineblock11.simplebroadcast.commands;
 
-import com.mineblock11.simplebroadcast.commands.arguments.BroadcastLocationArgument;
-import com.mineblock11.simplebroadcast.commands.arguments.MessageTypeArgument;
 import com.mineblock11.simplebroadcast.commands.arguments.MessageTypeSuggestionProvider;
 import com.mineblock11.simplebroadcast.data.BroadcastLocation;
 import com.mineblock11.simplebroadcast.data.BroadcastMessage;
@@ -36,10 +34,10 @@ public class SimpleBroadcastCommands {
                         .then(argument("contents", StringArgumentType.string()).executes(this::quickBroadcast))
                         .then(literal("types")
                                 .then(
-                                        argument("type", new MessageTypeArgument())
+                                        argument("type", IdentifierArgumentType.identifier())
                                                 .suggests(new MessageTypeSuggestionProvider())
                                                 .then(literal("location").executes(this::getMessageTypeLocation).then(
-                                                        argument("location", new BroadcastLocationArgument())
+                                                        argument("location", StringArgumentType.word())
                                                                 .suggests((a, builder) -> CommandSource.suggestMatching(Arrays.stream(BroadcastLocation.values()).map(value -> value.asString()), builder))
                                                                 .executes(this::setMessageTypeLocation)))
                                                 .then(literal("prefix").executes(this::getMessageTypePrefix)
@@ -55,10 +53,10 @@ public class SimpleBroadcastCommands {
                         )
                         .then(literal("help").executes(this::displayHelpPrompt))
                         .then(
-                                argument("type", new MessageTypeArgument())
+                                argument("type", IdentifierArgumentType.identifier())
                                         .suggests(new MessageTypeSuggestionProvider())
                                         .then(
-                                                argument("location", new BroadcastLocationArgument())
+                                                argument("location", StringArgumentType.word())
                                                         .suggests((a, builder) -> CommandSource.suggestMatching(Arrays.stream(BroadcastLocation.values()).map(value -> value.asString()), builder))
                                                         .then(argument("contents", StringArgumentType.string())
                                                                 .executes(this::executeLocationBroadcast)))
@@ -76,8 +74,8 @@ public class SimpleBroadcastCommands {
     }
 
     private int setMessageTypeLocation(CommandContext<ServerCommandSource> commandContext) {
-        BroadcastLocation location = BroadcastLocationArgument.get(commandContext, "location");
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        BroadcastLocation location = BroadcastLocation.valueOf(StringArgumentType.getString(commandContext, "location").toUpperCase());
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         type.setDefaultLocation(location);
         String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> default display location is now:<r> <color:gray>" + location.asString();
         commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
@@ -86,14 +84,14 @@ public class SimpleBroadcastCommands {
     }
 
     private int getMessageTypeLocation(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> default display location is:<r> <color:gray>" + type.getDefaultLocation().asString();
         commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
         return Command.SINGLE_SUCCESS;
     }
 
     private int setMessageTypeSuffix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "value");
         type.setSuffix(rawContents);
         String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> now has the following suffix:<r> ";
@@ -103,7 +101,7 @@ public class SimpleBroadcastCommands {
     }
 
     private int getMessageTypeSuffix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
 
         if (!type.hasSuffix()) {
             String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> does not have a suffix.<r>";
@@ -116,7 +114,7 @@ public class SimpleBroadcastCommands {
     }
 
     private int setMessageTypePrefix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "value");
         type.setPrefix(rawContents);
         String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> now has the following prefix:<r> ";
@@ -126,7 +124,7 @@ public class SimpleBroadcastCommands {
     }
 
     private int getMessageTypePrefix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
 
         if (!type.hasPrefix()) {
             String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> does not have a prefix.<r>";
@@ -160,8 +158,8 @@ public class SimpleBroadcastCommands {
     }
 
     private int executeLocationBroadcast(CommandContext<ServerCommandSource> commandContext) {
-        BroadcastLocation location = BroadcastLocationArgument.get(commandContext, "location");
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        BroadcastLocation location = BroadcastLocation.valueOf(StringArgumentType.getString(commandContext, "location").toUpperCase());
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "contents");
         BroadcastMessage message = new BroadcastMessage(rawContents, type, location);
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
@@ -169,7 +167,7 @@ public class SimpleBroadcastCommands {
     }
 
     private int executeChatBroadcast(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = MessageTypeArgument.get(commandContext, "type");
+        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "contents");
         BroadcastMessage message = new BroadcastMessage(rawContents, type, type.getDefaultLocation());
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
