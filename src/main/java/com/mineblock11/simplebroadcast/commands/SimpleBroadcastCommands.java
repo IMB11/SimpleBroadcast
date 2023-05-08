@@ -33,6 +33,7 @@ public class SimpleBroadcastCommands {
     public void registerCommands(CommandDispatcher<ServerCommandSource> commandDispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment registrationEnvironment) {
         commandDispatcher.register(
                 literal("broadcast")
+                        .then(argument("contents", StringArgumentType.string()).executes(this::quickBroadcast))
                         .then(literal("types")
                                 .then(
                                         argument("type", new MessageTypeArgument())
@@ -65,6 +66,13 @@ public class SimpleBroadcastCommands {
                                                 argument("contents", StringArgumentType.string())
                                                         .executes(this::executeChatBroadcast)))
         );
+    }
+
+    private int quickBroadcast(CommandContext<ServerCommandSource> commandContext) {
+        String rawContents = StringArgumentType.getString(commandContext, "contents");
+        BroadcastMessage message = new BroadcastMessage(rawContents, new MessageType.SimpleBroadcastDefaultMessageType(), BroadcastLocation.CHAT);
+        message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
+        return Command.SINGLE_SUCCESS;
     }
 
     private int setMessageTypeLocation(CommandContext<ServerCommandSource> commandContext) {

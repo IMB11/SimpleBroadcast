@@ -18,7 +18,7 @@ public class ConfigurationManager {
 
     static {
         ConfigurationManager.REGISTRY.put(new Identifier("minecraft:vanilla"), new MessageType.VanillaMessageType());
-        ConfigurationManager.REGISTRY.put(new Identifier("bukkit:default"), new MessageType.BukkitMessageType());
+        ConfigurationManager.REGISTRY.put(new Identifier("simplebroadcast:default"), new MessageType.SimpleBroadcastDefaultMessageType());
         ConfigurationManager.REGISTRY.put(new Identifier("minecraft:plain"), new MessageType.PlainMessageType());
     }
 

@@ -90,8 +90,8 @@ public abstract class MessageType {
         }
     }
 
-    public static class BukkitMessageType extends CustomMessageType {
-        public BukkitMessageType() {
+    public static class SimpleBroadcastDefaultMessageType extends CustomMessageType {
+        public SimpleBroadcastDefaultMessageType() {
             super("<color:dark_gray>[<color:dark_red><bold>BROADCAST<r><color:dark_gray>]", null, null);
         }
     }
