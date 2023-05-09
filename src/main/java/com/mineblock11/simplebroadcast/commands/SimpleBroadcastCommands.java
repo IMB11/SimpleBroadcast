@@ -31,6 +31,7 @@ public class SimpleBroadcastCommands {
     public void registerCommands(CommandDispatcher<ServerCommandSource> commandDispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment registrationEnvironment) {
         commandDispatcher.register(
                 literal("broadcast")
+                        .requires(source -> source.hasPermissionLevel(4))
                         .then(argument("contents", StringArgumentType.string()).executes(this::quickBroadcast))
                         .then(literal("types")
                                 .then(
