@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "icon": "assets/simplebroadcast/icon.png",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
     "main": [
       "com.mineblock11.simplebroadcast.SimpleBroadcast"
@@ -22,6 +22,6 @@
   "depends": {
     "fabricloader": ">=0.14.19",
     "fabric": "*",
-    "minecraft": ">=1.19"
+    "minecraft": ">=1.19 <1.20"
   }
 }

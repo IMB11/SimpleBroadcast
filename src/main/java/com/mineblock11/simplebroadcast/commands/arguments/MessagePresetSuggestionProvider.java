@@ -11,9 +11,9 @@ import net.minecraft.server.command.ServerCommandSource;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MessageTypeSuggestionProvider implements SuggestionProvider<ServerCommandSource> {
+public class MessagePresetSuggestionProvider implements SuggestionProvider<ServerCommandSource> {
     @Override
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) throws CommandSyntaxException {
-        return CommandSource.suggestIdentifiers(ConfigurationManager.MESSAGE_TYPE_REGISTRY.keySet(), builder);
+        return CommandSource.suggestIdentifiers(ConfigurationManager.MESSAGE_PRESET_REGISTRY.keySet(), builder);
     }
 }

@@ -14,6 +14,6 @@ public class MessageTypeArgument implements ArgumentType<MessageType> {
     }
 
     public MessageType parse(StringReader stringReader) throws CommandSyntaxException {
-        return ConfigurationManager.REGISTRY.get(IdentifierArgumentType.identifier().parse(stringReader));
+        return ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.identifier().parse(stringReader));
     }
 }

@@ -22,6 +22,8 @@ Here are some examples of the command:
 
 ## Advanced Usage
 
+### Message Types
+
 As previously said, you can customize every part of the broadcast - including the prefix (`[BROADCAST]`) and suffix of the actual chat message sent.
 
 This can be done through broadcast message types - these types specify the prefix, suffix and location of messages.
@@ -53,6 +55,33 @@ You can override the default location as well by specifying either `actionbar`, 
 - `/broadcast simplebroadcast:default actionbar '<rainbow>This is awesome!'`
 
 ![](https://cdn.modrinth.com/data/ijqqUY8R/images/29a142c0d7974ebc0e9f4c7d29889a5ce20db9d7.png)
+
+### Message Presets
+
+Message presets are useful when you want to save broadcasts that you might use quite a bit in the future. Eg: "The server will be restarting in 5 minutes."
+
+To create a message preset, you can use the following command:
+
+- `/broadcast preset create <id> <type> [contents]`
+
+Example usage:
+
+- `/broadcast preset create simplebroadcast:test minecraft:vanilla "Hello world!"`
+- `/broadcast preset create simplebroadcast:empty simplebroadcast:default`
+
+To broadcast a preset message simply call the following command:
+
+- `/broadcast preset <id>` - Broadcast a preset to the entire server.
+
+You can modify and read preset configurations using the following commands:
+
+- `/broadcast preset <id> location` - Get the display location of the message preset.
+- `/broadcast preset <id> location [actionbar/chat/title]` - Set the location of the preset.
+- `/broadcast preset <id> contents` - Get the raw contents of the message preset. This will not format the contents.
+- `/broadcast preset <id> contents <value>` - Set the raw contents of the message preset.
+- `/broadcast preset <id> type` - Get the message type of the preset.
+- `/broadcast preset <id> type <type>` - Set the message type of the preset.
+- `/broadcast preset <id> delete` - Delete the message preset.
 
 ## Roadmap
 

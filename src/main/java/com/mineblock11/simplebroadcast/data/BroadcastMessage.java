@@ -10,14 +10,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BroadcastMessage {
-    private final String contents;
-    private final MessageType messageType;
-    private final @Nullable BroadcastLocation broadcastLocation;
+    private String contents;
+    private MessageType messageType;
+    private BroadcastLocation broadcastLocation;
 
-    public BroadcastMessage(String contents, MessageType messageType, @Nullable BroadcastLocation broadcastLocation) {
+    public BroadcastMessage(String contents, MessageType messageType, @NotNull BroadcastLocation broadcastLocation) {
         this.contents = contents;
         this.messageType = messageType;
         this.broadcastLocation = broadcastLocation;
@@ -50,8 +51,33 @@ public class BroadcastMessage {
         return messageType;
     }
 
-    @Nullable
     public BroadcastLocation getBroadcastLocation() {
         return broadcastLocation;
+    }
+
+    @Nullable
+    public Identifier getID() {
+        for (var entry : ConfigurationManager.MESSAGE_PRESET_REGISTRY.entrySet()) {
+            if (entry.getValue().equals(this)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
+    public String getRawContents() {
+        return this.contents;
+    }
+
+    public void setRawContents(String contents) {
+        this.contents = contents;
+    }
+
+    public void setBroadcastLocation(BroadcastLocation location) {
+        this.broadcastLocation = location;
     }
 }

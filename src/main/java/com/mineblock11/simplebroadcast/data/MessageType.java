@@ -28,7 +28,7 @@ public abstract class MessageType {
 
     @Nullable
     public Identifier getID() {
-        for (var entry : ConfigurationManager.REGISTRY.entrySet()) {
+        for (var entry : ConfigurationManager.MESSAGE_TYPE_REGISTRY.entrySet()) {
             if (entry.getValue().equals(this)) {
                 return entry.getKey();
             }

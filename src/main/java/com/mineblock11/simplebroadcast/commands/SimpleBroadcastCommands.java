@@ -1,5 +1,6 @@
 package com.mineblock11.simplebroadcast.commands;
 
+import com.mineblock11.simplebroadcast.commands.arguments.MessagePresetSuggestionProvider;
 import com.mineblock11.simplebroadcast.commands.arguments.MessageTypeSuggestionProvider;
 import com.mineblock11.simplebroadcast.data.BroadcastLocation;
 import com.mineblock11.simplebroadcast.data.BroadcastMessage;
@@ -19,7 +20,6 @@ import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.Arrays;
@@ -33,6 +33,56 @@ public class SimpleBroadcastCommands {
                 literal("broadcast")
                         .requires(source -> source.hasPermissionLevel(4))
                         .then(argument("contents", StringArgumentType.string()).executes(this::quickBroadcast))
+                        .then(literal("preset")
+                                .then(
+                                        literal("create")
+                                                .then(
+                                                        argument("id", IdentifierArgumentType.identifier())
+                                                                .then(
+                                                                        argument("type", IdentifierArgumentType.identifier())
+                                                                                .suggests(new MessageTypeSuggestionProvider())
+                                                                                .executes(this::createBlankPreset)
+                                                                                .then(
+                                                                                        argument("contents", StringArgumentType.string())
+                                                                                                .executes(this::createContentPreset)
+                                                                                )
+                                                                )
+
+                                                )
+                                )
+                                .then(
+                                        argument("id", IdentifierArgumentType.identifier())
+                                                .suggests(new MessagePresetSuggestionProvider())
+                                                .executes(this::executePresetBroadcast)
+                                                .then(
+                                                        literal("contents")
+                                                                .executes(this::getPresetContents)
+                                                                .then(
+                                                                        argument("value", StringArgumentType.string())
+                                                                                .executes(this::setPresetContents)
+                                                                )
+                                                )
+                                                .then(
+                                                        literal("location")
+                                                                .executes(this::getPresetLocation)
+                                                                .then(
+                                                                        argument("location", StringArgumentType.word())
+                                                                                .suggests((a, builder) -> CommandSource.suggestMatching(Arrays.stream(BroadcastLocation.values()).map(value -> value.asString()), builder))
+                                                                                .executes(this::setPresetLocation)
+                                                                )
+                                                )
+                                                .then(
+                                                        literal("type")
+                                                                .executes(this::getPresetType)
+                                                                .then(
+                                                                        argument("type", IdentifierArgumentType.identifier())
+                                                                                .suggests(new MessageTypeSuggestionProvider())
+                                                                                .executes(this::setPresetType)
+                                                                )
+                                                )
+                                                .then(literal("delete").executes(this::deletePreset))
+                                )
+                        )
                         .then(literal("types")
                                 .then(
                                         argument("type", IdentifierArgumentType.identifier())
@@ -67,6 +117,126 @@ public class SimpleBroadcastCommands {
         );
     }
 
+    private void sendFeedback(CommandContext<ServerCommandSource> commandContext, String feedback) {
+        commandContext.getSource().sendFeedback(TextParserUtils.formatText(feedback), true);
+    }
+
+    private int createContentPreset(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        String contents = StringArgumentType.getString(commandContext, "contents");
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        BroadcastMessage message = new BroadcastMessage(contents, type, type.getDefaultLocation());
+
+        ConfigurationManager.MESSAGE_PRESET_REGISTRY.put(ID, message);
+
+        sendFeedback(commandContext, "<color:gold>Created a new message preset.\nPlease configure it using the <color:gray>/broadcast preset " + ID + " ...<color:gold> command.");
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int createBlankPreset(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        BroadcastMessage message = new BroadcastMessage("<color:gold>This is a message preset, please configure it using the <color:gray>/broadcast preset " + ID + " ...<color:gold> command.", type, type.getDefaultLocation());
+
+        ConfigurationManager.MESSAGE_PRESET_REGISTRY.put(ID, message);
+
+        sendFeedback(commandContext, "<color:gold>Created a new message preset.\nPlease configure it using the <color:gray>/broadcast preset " + ID + " ...<color:gold> command.");
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int deletePreset(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+
+        ConfigurationManager.MESSAGE_PRESET_REGISTRY.remove(ID);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> has been deleted.");
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int getPresetContents(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(ID);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> has the following contents:\n<r>" + preset.getRawContents());
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setPresetContents(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(ID);
+        String contents = StringArgumentType.getString(commandContext, "value");
+
+        preset.setRawContents(contents);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> now has the following contents:\n<r>" + preset.getRawContents());
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int getPresetLocation(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(ID);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> is shown at the following location: <color:gray>" + preset.getBroadcastLocation().asString());
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setPresetLocation(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(ID);
+        BroadcastLocation location = BroadcastLocation.valueOf(StringArgumentType.getString(commandContext, "location").toUpperCase());
+
+        preset.setBroadcastLocation(location);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> is now shown at the following location: <color:gray>" + preset.getBroadcastLocation().asString());
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int getPresetType(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "id"));
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> uses the <color:gray>" + preset.getMessageType().getID() + "<color:gold> message type.");
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setPresetType(CommandContext<ServerCommandSource> commandContext) {
+        Identifier ID = IdentifierArgumentType.getIdentifier(commandContext, "id");
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(ID);
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+
+        preset.setMessageType(type);
+
+        sendFeedback(commandContext, "<color:gray>" + ID + "<color:gold> now uses the <color:gray>" + type.getID() + "<color:gold> message type.");
+
+        ConfigurationManager.saveConfig();
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executePresetBroadcast(CommandContext<ServerCommandSource> commandContext) {
+        BroadcastMessage preset = ConfigurationManager.MESSAGE_PRESET_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "id"));
+        preset.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
+        return Command.SINGLE_SUCCESS;
+    }
+
     private int quickBroadcast(CommandContext<ServerCommandSource> commandContext) {
         String rawContents = StringArgumentType.getString(commandContext, "contents");
         BroadcastMessage message = new BroadcastMessage(rawContents, new MessageType.SimpleBroadcastDefaultMessageType(), BroadcastLocation.CHAT);
@@ -76,63 +246,63 @@ public class SimpleBroadcastCommands {
 
     private int setMessageTypeLocation(CommandContext<ServerCommandSource> commandContext) {
         BroadcastLocation location = BroadcastLocation.valueOf(StringArgumentType.getString(commandContext, "location").toUpperCase());
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         type.setDefaultLocation(location);
-        String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> default display location is now:<r> <color:gray>" + location.asString();
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
+
+        sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> default display location is now:<r> <color:gray>" + location.asString());
+
         ConfigurationManager.saveConfig();
         return Command.SINGLE_SUCCESS;
     }
 
     private int getMessageTypeLocation(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
-        String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> default display location is:<r> <color:gray>" + type.getDefaultLocation().asString();
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+
+        sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> default display location is:<r> <color:gray>" + type.getDefaultLocation().asString());
         return Command.SINGLE_SUCCESS;
     }
 
     private int setMessageTypeSuffix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "value");
         type.setSuffix(rawContents);
-        String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> now has the following suffix:<r> ";
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt).copy().append(type.getSuffixAsText().copy().formatted(Formatting.GRAY)), true);
+
+        sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> now has the following suffix:<r> ");
+
         ConfigurationManager.saveConfig();
         return Command.SINGLE_SUCCESS;
     }
 
     private int getMessageTypeSuffix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
 
         if (!type.hasSuffix()) {
-            String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> does not have a suffix.<r>";
-            commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
+            sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> does not have a suffix.<r>");
         } else {
-            String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> has the following suffix:<r> ";
-            commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt).copy().append(type.getSuffixAsText().copy().formatted(Formatting.GRAY)), true);
+            sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> has the following suffix:<r> ");
         }
+
         return Command.SINGLE_SUCCESS;
     }
 
     private int setMessageTypePrefix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "value");
         type.setPrefix(rawContents);
-        String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> now has the following prefix:<r> ";
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt).copy().append(type.getPrefixAsText().copy().formatted(Formatting.GRAY)), true);
+
+        sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> now has the following prefix:<r> ");
+
         ConfigurationManager.saveConfig();
         return Command.SINGLE_SUCCESS;
     }
 
     private int getMessageTypePrefix(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
 
         if (!type.hasPrefix()) {
-            String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> does not have a prefix.<r>";
-            commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
+            sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> does not have a prefix.<r>");
         } else {
-            String resultPrompt = "<color:gray>" + type.getID() + "<r><color:gold> has the following prefix:<r> ";
-            commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt).copy().append(type.getPrefixAsText().copy().formatted(Formatting.GRAY)), true);
+            sendFeedback(commandContext, "<color:gray>" + type.getID() + "<r><color:gold> has the following prefix:<r> ");
         }
 
         return Command.SINGLE_SUCCESS;
@@ -140,10 +310,9 @@ public class SimpleBroadcastCommands {
 
     private int createMessageType(CommandContext<ServerCommandSource> commandContext) {
         Identifier id = IdentifierArgumentType.getIdentifier(commandContext, "id");
-        String resultPrompt = "<color:gold>Created new broadcast message type: <color:gray>" + id;
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(resultPrompt), true);
+        sendFeedback(commandContext, "<color:gold>Created new broadcast message type: <color:gray>" + id);
         MessageType.CustomMessageType messageType = new MessageType.CustomMessageType(null, null, null);
-        ConfigurationManager.REGISTRY.put(id, messageType);
+        ConfigurationManager.MESSAGE_TYPE_REGISTRY.put(id, messageType);
         ConfigurationManager.saveConfig();
         return Command.SINGLE_SUCCESS;
     }
@@ -160,7 +329,7 @@ public class SimpleBroadcastCommands {
 
     private int executeLocationBroadcast(CommandContext<ServerCommandSource> commandContext) {
         BroadcastLocation location = BroadcastLocation.valueOf(StringArgumentType.getString(commandContext, "location").toUpperCase());
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "contents");
         BroadcastMessage message = new BroadcastMessage(rawContents, type, location);
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
@@ -168,7 +337,7 @@ public class SimpleBroadcastCommands {
     }
 
     private int executeChatBroadcast(CommandContext<ServerCommandSource> commandContext) {
-        MessageType type = ConfigurationManager.REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
+        MessageType type = ConfigurationManager.MESSAGE_TYPE_REGISTRY.get(IdentifierArgumentType.getIdentifier(commandContext, "type"));
         String rawContents = StringArgumentType.getString(commandContext, "contents");
         BroadcastMessage message = new BroadcastMessage(rawContents, type, type.getDefaultLocation());
         message.broadcast(commandContext.getSource().getServer(), commandContext.getSource());
