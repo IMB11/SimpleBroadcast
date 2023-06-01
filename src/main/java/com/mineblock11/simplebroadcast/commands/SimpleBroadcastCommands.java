@@ -118,7 +118,7 @@ public class SimpleBroadcastCommands {
     }
 
     private void sendFeedback(CommandContext<ServerCommandSource> commandContext, String feedback) {
-        commandContext.getSource().sendFeedback(TextParserUtils.formatText(feedback), true);
+        commandContext.getSource().sendFeedback(() -> TextParserUtils.formatText(feedback), true);
     }
 
     private int createContentPreset(CommandContext<ServerCommandSource> commandContext) {
@@ -323,7 +323,7 @@ public class SimpleBroadcastCommands {
         PlaceholderContext context = PlaceholderContext.of(commandContext.getSource());
         ParentTextNode contents = TextParserUtils.formatNodes(helpPrompt);
         Text parsed = Placeholders.parseText(contents, context);
-        commandContext.getSource().sendFeedback(parsed, false);
+        commandContext.getSource().sendFeedback(() -> parsed, false);
         return Command.SINGLE_SUCCESS;
     }
 
